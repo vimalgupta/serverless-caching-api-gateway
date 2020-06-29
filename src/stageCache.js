@@ -48,6 +48,22 @@ const createPatchForStage = (settings) => {
       path: '/*/*/caching/ttlInSeconds',
       value: `${settings.cacheTtlInSeconds}`
     });
+
+    if (settings.perKeyInvalidation) {
+	    patch.push({
+	      op: 'replace',
+	      path: '/*/*/caching/requireAuthorizationForCacheControl',
+	      value: `${settings.perKeyInvalidation.requireAuthorization}`
+	    });
+	    if (settings.perKeyInvalidation.requireAuthorization) {
+	      patch.push({
+					op: 'replace',
+					path: '/*/*/caching/unauthorizedCacheControlHeaderStrategy',
+					value: `${settings.perKeyInvalidation.handleUnauthorizedRequests}`
+	      });
+	    }
+    }
+
   }
   
   return patch;
@@ -55,12 +71,14 @@ const createPatchForStage = (settings) => {
 
 const patchForMethod = (path, method, endpointSettings) => {
   let patchPath = patchPathFor(path, method);
-  let patch = [{
-    op: 'replace',
-    path: `/${patchPath}/caching/enabled`,
-    value: `${endpointSettings.cachingEnabled}`
-  }];
+  let patch = [];
   if (endpointSettings.cachingEnabled) {
+    patch.push({
+		  op: 'replace',
+		  path: `/${patchPath}/caching/enabled`,
+		  value: `${endpointSettings.cachingEnabled}`
+  	});
+
     patch.push({
       op: 'replace',
       path: `/${patchPath}/caching/ttlInSeconds`,
